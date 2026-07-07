@@ -16,19 +16,20 @@
 <body>
 
     <h1>🛰️ ISS REAL-TIME RADAR</h1>
-    <div id="info">Connecting to NASA Satellites...</div>
+    <div id="info">Connecting to Space Satellites...</div>
     <div id="map"></div>
 
     <script>
-        var startCoords = new Array(0, 0);
+        var startCoords =;
         const map = L.map('map').setView(startCoords, 2);
         
-        L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        var sizeSize = new Array(50, 30);
-        var anchorSize = new Array(25, 15);
+        var sizeSize =;
+        var anchorSize =;
+        
         const issIcon = L.icon({
             iconUrl: 'https://wikimedia.org',
             iconSize: sizeSize,
@@ -39,21 +40,22 @@
 
         async function getISSLocation() {
             try {
-                const response = await fetch('https://wheretheiss.at');
+                // ĐÃ ĐỔI: Dùng cổng API dự phòng của Open Notify cực kỳ ổn định
+                const response = await fetch('https://opennotify.org');
                 const data = await response.json();
-                const lat = data.latitude;
-                const lng = data.longitude;
-                const vel = data.velocity;
-                const alt = data.altitude;
+                
+                const lat = Number(data.iss_position.latitude);
+                const lng = Number(data.iss_position.longitude);
 
-                var newCoords = new Array(lat, lng);
+                var newCoords = [lat, lng];
                 marker.setLatLng(newCoords);
                 map.panTo(newCoords);
 
                 document.getElementById('info').innerHTML = 
-                    "Latitude: " + lat.toFixed(4) + " | Longitude: " + lng.toFixed(4) + " | Speed: " + Math.round(vel) + " km/h | Altitude: " + alt.toFixed(1) + " km";
+                    "Latitude: " + lat.toFixed(4) + " | Longitude: " + lng.toFixed(4) + " | Status: Tracking Live";
             } catch (error) {
                 document.getElementById('info').innerText = "API Connection Error!";
+                console.error(error);
             }
         }
 
