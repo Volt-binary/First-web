@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radar Theo Doi Tram Vu Tru Quoc Te ISS</title>
+    <title>International Space Station Live Radar</title>
     <link rel="stylesheet" href="https://unpkg.com" />
     <script src="https://unpkg.com"></script>
     <style>
@@ -20,7 +20,6 @@
     <div id="map"></div>
 
     <script>
-        // Khoi tao ban do tai toa do 0, 0
         var startCoords = new Array(0, 0);
         const map = L.map('map').setView(startCoords, 2);
         
@@ -28,7 +27,6 @@
             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
-        // Kich thuoc anh ve tinh ISS
         var sizeSize = new Array(50, 30);
         var anchorSize = new Array(25, 15);
         const issIcon = L.icon({
@@ -37,7 +35,6 @@
             iconAnchor: anchorSize
         });
         
-        // Cam ghim ban dau tai toa do 0, 0
         const marker = L.marker(startCoords, {icon: issIcon}).addTo(map);
 
         async function getISSLocation() {
