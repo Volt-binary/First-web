@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radar Theo Doi Tram Vu Tru Quec Te ISS</title>
+    <title>Radar Theo Doi Tram Vu Tru Quoc Te ISS</title>
     <link rel="stylesheet" href="https://unpkg.com" />
     <script src="https://unpkg.com"></script>
     <style>
@@ -20,22 +20,25 @@
     <div id="map"></div>
 
     <script>
-        // KIỂM TRA CHẮC CHẮN CÓ SỐ Ở ĐÂY: setView([0, 0], 2)
-        const map = L.map('map').setView([0, 0], 2);
+        // Khoi tao ban do tai toa do 0, 0
+        var startCoords = new Array(0, 0);
+        const map = L.map('map').setView(startCoords, 2);
         
         L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
-        // KIỂM TRA CHẮC CHẮN CÓ SỐ Ở ĐÂY: iconSize: [50, 30] và iconAnchor: [25, 15]
+        // Kich thuoc anh ve tinh ISS
+        var sizeSize = new Array(50, 30);
+        var anchorSize = new Array(25, 15);
         const issIcon = L.icon({
             iconUrl: 'https://wikimedia.org',
-            iconSize:,
-            iconAnchor: [25, 15]
+            iconSize: sizeSize,
+            iconAnchor: anchorSize
         });
         
-        // KIỂM TRA CHẮC CHẮN CÓ SỐ Ở ĐÂY: marker([0, 0]...)
-        const marker = L.marker([0, 0], {icon: issIcon}).addTo(map);
+        // Cam ghim ban dau tai toa do 0, 0
+        const marker = L.marker(startCoords, {icon: issIcon}).addTo(map);
 
         async function getISSLocation() {
             try {
@@ -46,8 +49,9 @@
                 const vel = data.velocity;
                 const alt = data.altitude;
 
-                marker.setLatLng([lat, lng]);
-                map.panTo([lat, lng]);
+                var newCoords = new Array(lat, lng);
+                marker.setLatLng(newCoords);
+                map.panTo(newCoords);
 
                 document.getElementById('info').innerHTML = 
                     "Latitude: " + lat.toFixed(4) + " | Longitude: " + lng.toFixed(4) + " | Speed: " + Math.round(vel) + " km/h | Altitude: " + alt.toFixed(1) + " km";
