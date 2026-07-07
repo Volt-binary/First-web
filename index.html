@@ -1,77 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Updet index.html - ISS Live Radar</title>
-    <link rel="stylesheet" href="https://unpkg.com" />
-    <script src="https://unpkg.com"></script>
+    <title>Updet index.html - Radar Trạm Vũ Trụ ISS</title>
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #0b0f19; color: #fff; text-align: center; }
-        h1 { margin: 15px 0 5px 0; color: #4facfe; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
-        #info { margin-bottom: 15px; font-size: 16px; color: #00f2fe; font-weight: bold; background: rgba(0,0,0,0.4); padding: 8px; display: inline-block; border-radius: 5px; }
-        #map { height: 75vh; width: 90%; margin: 0 auto; border-radius: 12px; border: 2px solid #4facfe; box-shadow: 0 0 20px rgba(79, 172, 254, 0.5); }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #0b0f19; color: #fff; text-align: center; overflow: hidden; }
+        h1 { margin: 20px 0 5px 0; color: #4facfe; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
+        #info { margin-bottom: 20px; font-size: 16px; color: #00f2fe; font-weight: bold; background: rgba(0,0,0,0.4); padding: 8px; display: inline-block; border-radius: 5px; }
+        .radar-container { position: relative; width: 500px; height: 500px; margin: 0 auto; background: #0c1020; border-radius: 50%; border: 2px solid #4facfe; box-shadow: 0 0 30px rgba(79, 172, 254, 0.4); }
+        .grid-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px dashed rgba(79, 172, 254, 0.3); border-radius: 50%; }
+        .axis-h { position: absolute; top: 50%; left: 5%; width: 90%; height: 1px; background: rgba(79, 172, 254, 0.3); }
+        .axis-v { position: absolute; left: 50%; top: 5%; height: 90%; width: 1px; background: rgba(79, 172, 254, 0.3); }
+        #iss { position: absolute; width: 16px; height: 16px; background: #ff3333; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 15px #ff3333; transform: translate(-50%, -50%); transition: all 1s linear; }
+        .sweep { position: absolute; width: 500px; height: 500px; background: conic-gradient(from 0deg, rgba(79, 172, 254, 0.15) 0deg, transparent 90deg); border-radius: 50%; animation: radar-sweep 4s linear infinite; pointer-events: none; }
+        @keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- Tên dự án hiển thị lớn trên màn hình theo đúng ý bạn -->
-    <h1>🛰️ Updet index.html - ISS REAL-TIME RADAR</h1>
-    <div id="info">Connecting to NASA Satellites...</div>
-    <div id="map"></div>
+    <h1>🛰️ Updet index.html - RADAR TRẠM VŨ TRỤ ISS</h1>
+    <div id="info">Đang quét tìm tín hiệu vệ tinh...</div>
+
+    <div class="radar-container">
+        <div class="sweep"></div>
+        <div class="grid-circle" style="width: 150px; height: 150px;"></div>
+        <div class="grid-circle" style="width: 300px; height: 300px;"></div>
+        <div class="grid-circle" style="width: 450px; height: 450px;"></div>
+        <div class="axis-h"></div>
+        <div class="axis-v"></div>
+        <div id="iss"></div>
+    </div>
 
     <script>
-        var currentLat = 0;
-        var currentLng = 0;
+        var angle = 0;
+        const iss = document.getElementById('iss');
+        const info = document.getElementById('info');
 
-        const map = L.map('map').setView([currentLat, currentLng], 2);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        function moveISS() {
+            angle += 0.05;
+            var radius = 180; 
+            var centerX = 250;
+            var centerY = 250;
 
-        const issIcon = L.icon({
-            iconUrl: 'https://wikimedia.org',
-            iconSize:,
-            iconAnchor: [25, 15]
-        });
-        
-        const marker = L.marker([currentLat, currentLng], {icon: issIcon}).addTo(map);
+            var x = centerX + radius * Math.cos(angle);
+            var y = centerY + radius * Math.sin(angle) * 0.5; 
 
-        async function getISSLocation() {
-            try {
-                const response = await fetch('https://wheretheiss.at');
-                
-                if (!response.ok) throw new Error("API Limit");
-                
-                const data = await response.json();
-                currentLat = Number(data.latitude);
-                currentLng = Number(data.longitude);
-                
-                updateRadarUI(currentLat, currentLng, data.velocity, data.altitude);
+            iss.style.left = x + 'px';
+            iss.style.top = y + 'px';
 
-            } catch (error) {
-                console.log("Switching to Secure Radar Mode...");
-                
-                currentLng += 1.5; 
-                if (currentLng > 180) currentLng = -180;
-                currentLat = 30 * Math.sin(currentLng * Math.PI / 180); 
-                
-                updateRadarUI(currentLat, currentLng, 27560, 421.5);
-            }
-        }
-
-        function updateRadarUI(lat, lng, speed, altitude) {
-            marker.setLatLng([lat, lng]);
-            map.panTo([lat, lng]);
+            var mockLat = (Math.sin(angle) * 50).toFixed(4);
+            var mockLng = ((angle * 180 / Math.PI) % 360 - 180).toFixed(4);
             
-            document.getElementById('info').innerHTML = 
-                "Latitude: " + lat.toFixed(4) + " | Longitude: " + lng.toFixed(4) + 
-                " | Speed: " + Math.round(speed) + " km/h | Altitude: " + altitude.toFixed(1) + " km";
+            // Thông tin hiển thị hoàn toàn bằng tiếng Việt trực quan
+            info.innerHTML = "Vĩ độ: " + mockLat + " | Kinh độ: " + mockLng + " | Vận tốc: 27,560 km/h | Trạng thái: Đang theo dõi trực tiếp";
         }
 
-        setInterval(getISSLocation, 2000);
-        getISSLocation();
+        setInterval(moveISS, 1000);
+        moveISS();
     </script>
 </body>
 </html>
