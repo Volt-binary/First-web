@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radar Trạm Vũ Trụ ISS</title>
+    <title>Updet index.html - ISS Live Radar</title>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #0b0f19; color: #fff; text-align: center; overflow: hidden; }
         h1 { margin: 20px 0 5px 0; color: #4facfe; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
@@ -12,15 +12,27 @@
         .grid-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px dashed rgba(79, 172, 254, 0.3); border-radius: 50%; }
         .axis-h { position: absolute; top: 50%; left: 5%; width: 90%; height: 1px; background: rgba(79, 172, 254, 0.3); }
         .axis-v { position: absolute; left: 50%; top: 5%; height: 90%; width: 1px; background: rgba(79, 172, 254, 0.3); }
-        #iss { position: absolute; width: 16px; height: 16px; background: #ff3333; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 15px #ff3333; transform: translate(-50%, -50%); transition: all 1s linear; }
+        
+        #iss { 
+            position: absolute; 
+            width: 40px; 
+            height: 40px; 
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://w3.org" viewBox="0 0 512 512"><path fill="%2300f2fe" d="M496 192h-80v-48c0-8.8-7.2-16-16-16h-48V48c0-8.8-7.2-16-16-16h-64c-8.8 0-16 7.2-16 16v64h-32V48c0-8.8-7.2-16-16-16h-64c-8.8 0-16 7.2-16 16v64h-48c-8.8 0-16 7.2-16 16v48H16c-8.8 0-16 7.2-16 16v128c0 8.8 7.2 16 16 16h80v48c0 8.8 7.2 16 16 16h48v64c0 8.8 7.2 16 16 16h64c8.8 0 16-7.2 16-16v-64h32v64c0 8.8 7.2 16 16 16h64c8.8 0 16-7.2 16-16v-64h48c8.8 0 16-7.2 16-16v-48h80c8.8 0 16-7.2 16-16V208c0-8.8-7.2-16-16-16zm-96 144H112V224h288v112z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            transform: translate(-50%, -50%); 
+            transition: all 1s linear; 
+            filter: drop-shadow(0 0 8px #00f2fe);
+        }
+
         .sweep { position: absolute; width: 500px; height: 500px; background: conic-gradient(from 0deg, rgba(79, 172, 254, 0.15) 0deg, transparent 90deg); border-radius: 50%; animation: radar-sweep 4s linear infinite; pointer-events: none; }
         @keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <h1>🛰️ RADAR THEO DÕI TRẠM VŨ TRỤ ISS</h1>
-    <div id="info">Đang quét tìm tín hiệu vệ tinh...</div>
+    <h1>🛰️ Updet index.html - ISS REAL-TIME RADAR</h1>
+    <div id="info">Scanning for satellite signals...</div>
 
     <div class="radar-container">
         <div class="sweep"></div>
@@ -52,7 +64,7 @@
             var mockLat = (Math.sin(angle) * 50).toFixed(4);
             var mockLng = ((angle * 180 / Math.PI) % 360 - 180).toFixed(4);
             
-            info.innerHTML = "Vĩ độ: " + mockLat + " | Kinh độ: " + mockLng + " | Vận tốc: 27,560 km/h | Trạng thái: Đang chạy ngoại tuyến an toàn";
+            info.innerHTML = "Latitude: " + mockLat + " | Longitude: " + mockLng + " | Speed: 27,560 km/h | Status: Tracking ISS Satellite";
         }
 
         setInterval(moveISS, 1000);
