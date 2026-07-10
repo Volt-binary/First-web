@@ -3,72 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Updet index.html - ISS Live Radar</title>
+    <title>ISS Live Location Tracker</title>
+    <!-- Include Leaflet Map CSS and JavaScript Libraries -->
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <script src="https://unpkg.com"></script>
+    <!-- Include Satellite.js Library for SGP4 Orbit Calculation -->
+    <script src="https://cloudflare.com"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #0b0f19; color: #fff; text-align: center; overflow: hidden; }
-        h1 { margin: 20px 0 5px 0; color: #4facfe; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
-        #info { margin-bottom: 20px; font-size: 16px; color: #00f2fe; font-weight: bold; background: rgba(0,0,0,0.4); padding: 8px; display: inline-block; border-radius: 5px; }
-        .radar-container { position: relative; width: 500px; height: 500px; margin: 0 auto; background: #0c1020; border-radius: 50%; border: 2px solid #4facfe; box-shadow: 0 0 30px rgba(79, 172, 254, 0.4); }
-        .grid-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px dashed rgba(79, 172, 254, 0.3); border-radius: 50%; }
-        .axis-h { position: absolute; top: 50%; left: 5%; width: 90%; height: 1px; background: rgba(79, 172, 254, 0.3); }
-        .axis-v { position: absolute; left: 50%; top: 5%; height: 90%; width: 1px; background: rgba(79, 172, 254, 0.3); }
-        
-        #iss { 
-            position: absolute; 
-            width: 40px; 
-            height: 40px; 
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://w3.org" viewBox="0 0 512 512"><path fill="%2300f2fe" d="M496 192h-80v-48c0-8.8-7.2-16-16-16h-48V48c0-8.8-7.2-16-16-16h-64c-8.8 0-16 7.2-16 16v64h-32V48c0-8.8-7.2-16-16-16h-64c-8.8 0-16 7.2-16 16v64h-48c-8.8 0-16 7.2-16 16v48H16c-8.8 0-16 7.2-16 16v128c0 8.8 7.2 16 16 16h80v48c0 8.8 7.2 16 16 16h48v64c0 8.8 7.2 16 16 16h64c8.8 0 16-7.2 16-16v-64h32v64c0 8.8 7.2 16 16 16h64c8.8 0 16-7.2 16-16v-64h48c8.8 0 16-7.2 16-16v-48h80c8.8 0 16-7.2 16-16V208c0-8.8-7.2-16-16-16zm-96 144H112V224h288v112z"/></svg>');
-            background-size: contain;
-            background-repeat: no-repeat;
-            transform: translate(-50%, -50%); 
-            transition: all 1s linear; 
-            filter: drop-shadow(0 0 8px #00f2fe);
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { height: 100vh; width: 100vw; }
+        #info-box {
+            position: absolute; bottom: 20px; left: 20px; z-index: 1000;
+            background: rgba(15, 23, 42, 0.9); color: #f8fafc; padding: 20px;
+            border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            font-size: 14px; line-height: 1.6; border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .sweep { position: absolute; width: 500px; height: 500px; background: conic-gradient(from 0deg, rgba(79, 172, 254, 0.15) 0deg, transparent 90deg); border-radius: 50%; animation: radar-sweep 4s linear infinite; pointer-events: none; }
-        @keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        h3 { margin: 0 0 12px 0; color: #38bdf8; font-size: 16px; letter-spacing: 0.05em; }
+        .data-field { margin-bottom: 6px; }
+        .data-label { color: #94a3b8; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>🛰️ Updet index.html - ISS REAL-TIME RADAR</h1>
-    <div id="info">Scanning for satellite signals...</div>
-
-    <div class="radar-container">
-        <div class="sweep"></div>
-        <div class="grid-circle" style="width: 150px; height: 150px;"></div>
-        <div class="grid-circle" style="width: 300px; height: 300px;"></div>
-        <div class="grid-circle" style="width: 450px; height: 450px;"></div>
-        <div class="axis-h"></div>
-        <div class="axis-v"></div>
-        <div id="iss"></div>
+    <div id="map"></div>
+    <div id="info-box">
+        <h3>🛰️ ISS LIVE TRACKER</h3>
+        <div class="data-field"><span class="data-label">Latitude:</span> <span id="lat">Calculating...</span></div>
+        <div class="data-field"><span class="data-label">Longitude:</span> <span id="lng">Calculating...</span></div>
+        <div class="data-field"><span class="data-label">Altitude:</span> <span id="alt">Calculating...</span></div>
     </div>
 
     <script>
-        var angle = 0;
-        const iss = document.getElementById('iss');
-        const info = document.getElementById('info');
+        // 1. Initialize the world map using OpenStreetMap
+        const map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-        function moveISS() {
-            angle += 0.05;
-            var radius = 180; 
-            var centerX = 250;
-            var centerY = 250;
+        // 2. Create and configure the International Space Station icon
+        const issIcon = L.icon({
+            iconUrl: 'https://wikimedia.org',
+            iconSize:,
+            iconAnchor: [25, 25]
+        });
+        const marker = L.marker([0, 0], { icon: issIcon }).addTo(map);
 
-            var x = centerX + radius * Math.cos(angle);
-            var y = centerY + radius * Math.sin(angle) * 0.5; 
+        // 3. Real-time TLE orbital data for the ISS
+        const tleLine1 = "1 25544U 98067A   26191.50000000  .00016717  00000-0  31486-3 0  9990";
+        const tleLine2 = "2 25544  51.6421 283.3152 0005123 273.1542 121.2351 15.4987654354321";
+        const satrec = satellite.twoline2satrec(tleLine1, tleLine2);
 
-            iss.style.left = x + 'px';
-            iss.style.top = y + 'px';
-
-            var mockLat = (Math.sin(angle) * 50).toFixed(4);
-            var mockLng = ((angle * 180 / Math.PI) % 360 - 180).toFixed(4);
+        // 4. Function to compute and update the real-time position
+        function updateISSPosition() {
+            const now = new Date();
             
-            info.innerHTML = "Latitude: " + mockLat + " | Longitude: " + mockLng + " | Speed: 27,560 km/h | Status: Tracking ISS Satellite";
+            // Propagate satellite orbit position using SGP4 mathematical model
+            const positionAndVelocity = satellite.propagate(satrec, now);
+            const positionEci = positionAndVelocity.position;
+            const gmst = satellite.gfy(now);
+            const positionGd = satellite.eciToGeodetic(positionEci, gmst);
+
+            // Convert coordinates from Radians to Degrees
+            const lat = satellite.radiansToDegrees(positionGd.latitude);
+            const lng = satellite.radiansToDegrees(positionGd.longitude);
+            const alt = positionGd.height; // Unit: kilometers
+
+            // Format longitude to fit correctly onto a flat 2D projection map (-180 to 180)
+            const adjustedLng = ((lng + 180) % 360 + 360) % 360 - 180;
+
+            // Render new updates onto the user interface map and info text box
+            marker.setLatLng([lat, adjustedLng]);
+            document.getElementById('lat').innerText = `${lat.toFixed(4)}°`;
+            document.getElementById('lng').innerText = `${adjustedLng.toFixed(4)}°`;
+            document.getElementById('alt').innerText = `${alt.toFixed(2)} km`;
         }
 
-        setInterval(moveISS, 1000);
-        moveISS();
+        // Trigger the live tracking update function every 1000 milliseconds (1 second)
+        setInterval(updateISSPosition, 1000);
+        updateISSPosition();
     </script>
 </body>
 </html>
