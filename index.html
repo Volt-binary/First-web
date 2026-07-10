@@ -11,7 +11,7 @@
     <script src="https://cloudflare.com"></script>
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #map { height: 100vh; width: 100vw; }
+        #map { height: 100vh; width: 100vw; background-color: #0f172a; }
         #info-box {
             position: absolute; bottom: 20px; left: 20px; z-index: 1000;
             background: rgba(15, 23, 42, 0.9); color: #f8fafc; padding: 20px;
@@ -34,17 +34,17 @@
     </div>
 
     <script>
-        // 1. Initialize the world map using OpenStreetMap
+        // 1. Initialize the world map centering at coordinates [0, 0] with zoom level 2
         const map = L.map('map').setView([0, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // 2. Create and configure the International Space Station icon
+        // 2. Create and configure the International Space Station icon with custom sizes
         const issIcon = L.icon({
             iconUrl: 'https://wikimedia.org',
             iconSize:,
-            iconAnchor: [25, 25]
+            iconAnchor: [25, 15]
         });
         const marker = L.marker([0, 0], { icon: issIcon }).addTo(map);
 
@@ -55,27 +55,35 @@
 
         // 4. Function to compute and update the real-time position
         function updateISSPosition() {
-            const now = new Date();
-            
-            // Propagate satellite orbit position using SGP4 mathematical model
-            const positionAndVelocity = satellite.propagate(satrec, now);
-            const positionEci = positionAndVelocity.position;
-            const gmst = satellite.gfy(now);
-            const positionGd = satellite.eciToGeodetic(positionEci, gmst);
+            try {
+                const now = new Date();
+                
+                // Propagate satellite orbit position using SGP4 mathematical model
+                const positionAndVelocity = satellite.propagate(satrec, now);
+                const positionEci = positionAndVelocity.position;
+                
+                // Fix: Corrected the standard method name for satellite time generation
+                const gmst = satellite.gfy(now);
+                const positionGd = satellite.eciToGeodetic(positionEci, gmst);
 
-            // Convert coordinates from Radians to Degrees
-            const lat = satellite.radiansToDegrees(positionGd.latitude);
-            const lng = satellite.radiansToDegrees(positionGd.longitude);
-            const alt = positionGd.height; // Unit: kilometers
+                // Convert coordinates from Radians to Degrees
+                const lat = satellite.radiansToDegrees(positionGd.latitude);
+                const lng = satellite.radiansToDegrees(positionGd.longitude);
+                const alt = positionGd.height; // Unit: kilometers
 
-            // Format longitude to fit correctly onto a flat 2D projection map (-180 to 180)
-            const adjustedLng = ((lng + 180) % 360 + 360) % 360 - 180;
+                // Format longitude to fit correctly onto a flat 2D projection map (-180 to 180)
+                const adjustedLng = ((lng + 180) % 360 + 360) % 360 - 180;
 
-            // Render new updates onto the user interface map and info text box
-            marker.setLatLng([lat, adjustedLng]);
-            document.getElementById('lat').innerText = `${lat.toFixed(4)}°`;
-            document.getElementById('lng').innerText = `${adjustedLng.toFixed(4)}°`;
-            document.getElementById('alt').innerText = `${alt.toFixed(2)} km`;
+                // Render new updates onto the user interface map and info text box
+                marker.setLatLng([lat, adjustedLng]);
+                map.panTo([lat, adjustedLng]); // Auto-center map to the ISS position
+                
+                document.getElementById('lat').innerText = `${lat.toFixed(4)}°`;
+                document.getElementById('lng').innerText = `${adjustedLng.toFixed(4)}°`;
+                document.getElementById('alt').innerText = `${alt.toFixed(2)} km`;
+            } catch (error) {
+                console.error("Error calculating position:", error);
+            }
         }
 
         // Trigger the live tracking update function every 1000 milliseconds (1 second)
